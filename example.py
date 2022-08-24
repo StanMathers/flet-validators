@@ -1,7 +1,7 @@
 import flet
 from flet import *
 
-from validator import Validator, Lenght, Email
+from validator import Validator, Lenght, Email, EqualTo
 
 
 def main(page: Page):
@@ -20,6 +20,7 @@ def main(page: Page):
         success_border_color="green",
         success_message="Good Email",
     )
+    
 
     login_field = TextField(
         hint_text="Username", on_change=Validator(email_validator, page=page)
@@ -31,7 +32,22 @@ def main(page: Page):
         on_change=Validator(lenght_validator, page=page),
     )
 
-    page.add(login_field, password_field)
+    # EqualTo validator
+    equal_to_validator = EqualTo(
+        field=password_field,
+        error_message='Passwords do not match',
+        error_border_color='red',
+        success_message='Passwords match',
+        success_border_color='green'
+    )
+    
+    confirm_password = TextField(
+        hint_text='Password',
+        password=True,
+        on_change=Validator(equal_to_validator, page=page)
+    )
+    
+    page.add(login_field, password_field, confirm_password)
 
 
 flet.app(target=main)

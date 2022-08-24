@@ -5,6 +5,7 @@ from flet.page import ControlEvent
 from typing import Any, Type
 from email_validator import EmailNotValidError, validate_email
 
+
 class GenericValidator:
     def __init__(
         self,
@@ -128,9 +129,8 @@ class Email(GenericValidator):
         self.allow_smtputf8 = allow_smtputf8
         self.allow_empty_local = allow_empty_local
     
-    def __call__(self, e: Type[ControlEvent]):
+    def __call__(self, e):
         val = e.control.value
-        
         try:
             if len(val) == 0:
                 self._set_error_msg(e)
@@ -144,3 +144,23 @@ class Email(GenericValidator):
             self._set_error_msg(e)
             self._set_error(e)
         
+class EqualTo(GenericValidator):
+    def __init__(self, error_border_color: str = None, success_border_color: str = None, reset_border_color: str = None, success_message: str = None, error_message: str = None, reset_message: str = None, field: Control = None) -> None:
+        super().__init__(error_border_color, success_border_color, reset_border_color, success_message, error_message, reset_message)
+        self.field = field
+        
+    def __call__(self, e):
+        current_field_val = e.control.value
+        compare_field_val = self.field.value
+        
+        if current_field_val == compare_field_val:
+            self._set_success_msg(e)
+            self._set_success(e)
+    
+        elif current_field_val != compare_field_val:
+            self._set_error_msg(e)
+            self._set_error(e)
+        
+        else:
+            self._set_reset_msg(e)
+            self._set_reset(e)

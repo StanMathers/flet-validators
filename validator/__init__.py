@@ -1,1 +1,1 @@
-from validator.validation import Validator, Lenght, Email
+from validator.validation import Validator, Lenght, Email, EqualTo
