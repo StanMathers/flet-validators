@@ -97,7 +97,9 @@ from validator import Validator, Lenght, Email, EqualTo
 
 def main(page: Page):
     """
-    Here we validate `lenght` and `email` of login_field and check if `confirm_login` is equal to `login_field`. At last, we create button to check if everything is correct to validate correct data by using `all_validated` property. If validations are correct, it return True, otherwise False 
+    Here we validate `lenght` and `email` of login_field and check if `confirm_login` is equal to `login_field`.
+    At last, we create button to check if everything is correct to validate correct data by using `all_validated` property.
+    If validations are correct, it return True, otherwise False 
     """
 
     lenght_validator = Lenght(
