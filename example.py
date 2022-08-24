@@ -32,7 +32,6 @@ def main(page: Page):
         on_change=Validator(lenght_validator, page=page),
     )
 
-    # EqualTo validator
     equal_to_validator = EqualTo(
         field=password_field,
         error_message='Passwords do not match',
