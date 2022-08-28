@@ -7,23 +7,23 @@ from validator import Validator, Lenght, Email, EqualTo
 def main(page: Page):
 
     lenght_validator = Lenght(
-        max_lenght=10,
+        max_lenght=20,
         error_border_color="red",
-        error_message="Some error message",
+        error_message="Max lenght must be 20 chars long",
         success_border_color="green",
-        success_message="Seems good!",
+        success_message="20 chars are accepted",
     )
     
     email_validator = Email(
         error_border_color="red",
-        error_message="Wrong Email",
+        error_message="Email",
         success_border_color="green",
         success_message="Good Email",
     )
     
 
     login_field = TextField(
-        hint_text="Username", on_change=Validator(email_validator, page=page)
+        hint_text="Username", on_change=Validator(email_validator, lenght_validator, page=page, validators_list=True)
     )
 
     password_field = TextField(

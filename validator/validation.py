@@ -34,41 +34,92 @@ class GenericValidator:
     def _set_reset(self, e: Type[ControlEvent]):
         e.control.border_color = self.reset_border_color
 
-    def _set_success_msg(self, e: Type[ControlEvent]):
-        e.control.helper_text = (
-            self.success_message if self.success_message is not None else None
-        )
+    def _set_success_msg(self, e: Type[ControlEvent], kwargs):
+        if kwargs["v_list"] is True:
+            if str(e.control.helper_text).count(kwargs["l_char"]) == kwargs["n_items"]:
+                e.control.helper_text = ""
 
-    def _set_error_msg(self, e: Type[ControlEvent]):
-        e.control.helper_text = (
-            self.error_message if self.error_message is not None else None
-        )
+            e.control.helper_text += (
+                "-" + " ✓ " + self.success_message + "\n"
+                if self.success_message is not None
+                else None
+            )
 
-    def _set_reset_msg(self, e: Type[ControlEvent]):
+        else:
+            e.control.helper_text = (
+                self.success_message if self.success_message is not None else None
+            )
+
+    def _set_error_msg(self, e: Type[ControlEvent], kwargs):
+        if kwargs["v_list"] is True:
+            if str(e.control.helper_text).count(kwargs["l_char"]) == kwargs["n_items"]:
+                e.control.helper_text = ""
+
+            e.control.helper_text += (
+                "-" + " ✕ " + self.error_message + "\n"
+                if self.error_message is not None
+                else None
+            )
+
+        else:
+            e.control.helper_text = (
+                self.error_message if self.error_message is not None else None
+            )
+
+    def _set_reset_msg(self, e: Type[ControlEvent], kwargs):
+
         e.control.helper_text = (
             self.reset_message if self.reset_message is not None else None
         )
 
 
 class Validator:
-    def __init__(self, *validator, page: Type[Page]) -> None:
+    def __init__(
+        self,
+        *validator,
+        page: Type[Page],
+        validators_list: bool = None,
+        listing_char: str = "-"
+    ) -> None:
         self.validator = validator
         self.page = page
+        self.validators_list = validators_list
+        self.listing_char = listing_char
 
         self._vals = []
         self.all_validated = None
 
     def __call__(self, e: Type[ControlEvent]) -> Any:
         self.e = e
+
+        # NoneType fix for concatenating
+        if self.e.control.helper_text is None:
+            e.control.helper_text = ""
+            self.page.update()
+
         for i in self.validator:
 
             if len(self._vals) == len(self.validator):
                 self._vals.clear()
 
-            self._vals.append(i(self.e))
+            # Giving data to validator's **kwargs
+            self._vals.append(
+                i(
+                    self.e,
+                    v_list=self.validators_list,
+                    n_items=len(self.validator),
+                    l_char=self.listing_char,
+                )
+            )
             self.page.update()
-            # print(self._vals)
+
             self.all_validated = all(self._vals)
+
+        if self.validators_list is True:
+            if str(e.control.helper_text).count(self.listing_char) == len(
+                self.validator
+            ):
+                e.control.helper_text = ""
 
 
 class Lenght(GenericValidator):
@@ -94,22 +145,23 @@ class Lenght(GenericValidator):
         self.max_lenght = max_lenght
         self.min_lenght = min_lenght
 
-    def __call__(self, e: Type[ControlEvent]) -> Any:
+    def __call__(self, e: Type[ControlEvent], **kwargs) -> Any:
         field_lenght = len(e.control.value)
 
         if field_lenght > self.max_lenght:
-            self._set_error_msg(e)
+            self._set_error_msg(e, kwargs)
             self._set_error(e)
             return False
 
         elif self.min_lenght < field_lenght < self.max_lenght:
-            self._set_success_msg(e)
+            print(kwargs)
+            self._set_success_msg(e, kwargs)
             self._set_success(e)
             return True
 
         elif field_lenght == 0:
             self._set_reset(e)
-            self._set_reset_msg(e)
+            self._set_reset_msg(e, kwargs)
 
 
 class Email(GenericValidator):
@@ -140,11 +192,12 @@ class Email(GenericValidator):
         self.allow_smtputf8 = allow_smtputf8
         self.allow_empty_local = allow_empty_local
 
-    def __call__(self, e):
+    def __call__(self, e, **kwargs):
+        print(kwargs)
         val = e.control.value
         try:
             if len(val) == 0:
-                self._set_error_msg(e)
+                self._set_error_msg(e, kwargs)
                 self._set_error(e)
 
             elif validate_email(
@@ -153,12 +206,12 @@ class Email(GenericValidator):
                 allow_smtputf8=self.allow_smtputf8,
                 allow_empty_local=self.allow_empty_local,
             ):
-                self._set_success_msg(e)
+                self._set_success_msg(e, kwargs)
                 self._set_success(e)
                 return True
 
         except EmailNotValidError as g:
-            self._set_error_msg(e)
+            self._set_error_msg(e, kwargs)
             self._set_error(e)
             return False
 
@@ -184,20 +237,20 @@ class EqualTo(GenericValidator):
         )
         self.field = field
 
-    def __call__(self, e):
+    def __call__(self, e: Type[ControlEvent], **kwargs):
         current_field_val = e.control.value
         compare_field_val = self.field.value
 
         if current_field_val == compare_field_val:
-            self._set_success_msg(e)
+            self._set_success_msg(e, kwargs)
             self._set_success(e)
             return True
 
         elif current_field_val != compare_field_val:
-            self._set_error_msg(e)
+            self._set_error_msg(e, kwargs)
             self._set_error(e)
             return False
 
         else:
-            self._set_reset_msg(e)
+            self._set_reset_msg(e, kwargs)
             self._set_reset(e)
